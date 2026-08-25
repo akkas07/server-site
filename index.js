@@ -27,7 +27,7 @@ const client = new MongoClient(uri, {
 
 
 const JWKS = createRemoteJWKSet(
-  new URL("http://localhost:3000/api/auth/jwks")
+  new URL(`${process.env.CLIENT_URL}/api/auth/jwks`)
 )
 
 const verifyToken = async (req, res, next) => {
@@ -40,16 +40,16 @@ const verifyToken = async (req, res, next) => {
   if (!token) {
     return res.status(401).json({ message: "unauthorized access" });
   }
- 
+
   try {
-    const {payload}= await jwtVerify(token, JWKS);
+    const { payload } = await jwtVerify(token, JWKS);
     console.log(payload);
-     next();
+    next();
   } catch (error) {
     return res.status(401).json({ message: "Forbidden" });
   }
 
- 
+
 }
 
 
@@ -83,7 +83,7 @@ async function run() {
 
     // get datails page single car  
     //midile ware 
-    app.get("/cars/:id",async (req, res) => {
+    app.get("/cars/:id", async (req, res) => {
       const { id } = req.params;
       const result = await carsCollection.findOne({ _id: new ObjectId(id) });
       res.json(result);
@@ -116,7 +116,7 @@ async function run() {
 
 
     // edit 
-    app.patch("/cars/:id",verifyToken, async (req, res) => {
+    app.patch("/cars/:id", verifyToken, async (req, res) => {
       const id = req.params.id;
       const updatedcar = req.body;
       const result = await carsCollection.updateOne(
@@ -137,12 +137,32 @@ async function run() {
 
 
 
+    app.get('/search', async (req, res) => {
+      try {
+        const { search, type } = req.query;
+        let queryObj = {};
+
+        if (search) {
+
+          queryObj.$or = [
+            { carname: { $regex: search, $options: 'i' } },
+            { cartype: { $regex: search, $options: 'i' } }
+          ]
+
+        }
+        if (type) {
+          queryObj.cartype = { $regex: `^${type}$`, $options: 'i' };
+        }
+        const result = await carsCollection.find(queryObj).toArray();
+        res.send(result);
+      } catch (error) {
+        console.error("Search Error:", error);
+        res.status(500).send({ message: "Internal server error" });
+      }
+    });
 
 
-
-
-
-    await client.db("admin").command({ ping: 1 });
+    // await client.db("admin").command({ ping: 1 });
     console.log("Pinged your deployment. You successfully connected to MongoDB!");
   } finally {
     // await client.close();
@@ -155,3 +175,5 @@ run().catch(console.dir);
 app.get("/", (req, res) => {
   res.send("server is running fine");
 });
+
+
