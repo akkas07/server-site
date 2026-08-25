@@ -67,11 +67,39 @@ async function run() {
       res.json(result);
     });
 
+
+
     app.get("/userBooking/:userId", async (req, res) => {
       const { userId } = req.params;
       const result = await userBookingCollection.find({ userId: userId }).toArray();
       res.json(result);
     });
+
+
+      app.get("/my-added-cars/:userId", async (req, res) => {
+      const { userId } = req.params;
+      const result = await carsCollection.find({ userId: userId }).toArray();
+      res.json(result);
+    });
+
+    
+
+   app.patch("/my-added-cars/:id", async (req, res) => {
+      const id = req.params.id;
+      const updatedcar = req.body;
+      const result = await carsCollection.updateOne(
+        { _id: new ObjectId(id) },
+        { $set: updatedcar }
+      )
+      res.json(result);
+
+     
+    });
+
+  
+ 
+
+
 
 
 
