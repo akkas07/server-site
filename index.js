@@ -59,7 +59,7 @@ async function run() {
 
     })
 
-
+    
 
     app.post("/userBooking/:userId", async (req, res) => {
       const data = req.body;
@@ -67,6 +67,11 @@ async function run() {
       res.json(result);
     });
 
+    app.get("/userBooking/:userId", async (req, res) => {
+      const { userId } = req.params;
+      const result = await userBookingCollection.find({ userId: userId }).toArray();
+      res.json(result);
+    });
 
 
 
